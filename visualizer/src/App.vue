@@ -2,7 +2,7 @@
   <div id="app">
     <button v-on:click="connect">Connect</button>
     <button v-on:click="reset">Reset</button>
-    <canvas ref="canvas" width="500" height="500"></canvas>
+    <canvas ref="canvas" width="500" height="500" v-on:click="clickCanvas"></canvas>
   </div>
 </template>
 
@@ -14,7 +14,8 @@ export default {
   data: () => ({
     m: 8,
     n: 8,
-    maze: null
+    maze: null,
+    selected: null
   }),
 
   async mounted() {
@@ -30,17 +31,52 @@ export default {
     getPosY(y) {
       return (this.n - y - 1) * 50 + 25;
     },
+    clickCanvas(event) {
+      const canvas = this.$refs.canvas;
+      const boundingRect = canvas.getBoundingClientRect();
+
+      const scaleX = canvas.width / boundingRect.width;
+      const scaleY = canvas.height / boundingRect.height;
+
+      const canvasX = (event.clientX - boundingRect.left) * scaleX;
+      const canvasY = (event.clientY - boundingRect.top) * scaleY;
+
+      for (let x = 0; x < this.m; x++) {
+        for (let y = 0; y < this.n; y++) {
+          const posX = this.getPosX(x);
+          const posY = this.getPosY(y);
+          if (
+            Math.pow(posX - canvasX, 2) + Math.pow(posY - canvasY, 2) < 50 &&
+            this.maze.get(x, y) == mod.CellState.Empty
+          ) {
+            if (this.selected) {
+              this.maze.lee(this.selected.x, this.selected.y, x, y);
+              this.selected = null;
+            } else {
+              this.selected = {
+                x,
+                y
+              };
+            }
+          }
+        }
+      }
+    },
     draw() {
       if (this.$refs.canvas) {
         let ctx = this.$refs.canvas.getContext("2d");
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        ctx.strokeStyle = "black";
         for (let x = 0; x < this.m; x++) {
           for (let y = 0; y < this.n; y++) {
             let cell = this.maze.get(x, y);
             let posX = this.getPosX(x);
             let posY = this.getPosY(y);
             ctx.beginPath();
+            if (this.selected && this.selected.x === x && this.selected.y === y) {
+              ctx.strokeStyle = 'red';
+            } else {
+              ctx.strokeStyle = 'black';
+            }
             if (cell === mod.CellState.Empty) {
               ctx.arc(posX, posY, 5, 0, 360);
             } else if (cell == mod.CellState.Blocked) {
