@@ -1,10 +1,10 @@
-use wasm_bindgen::prelude::*;
-use std::cmp::{max, min};
-use std::collections::VecDeque;
+use std::cmp::{max, min, Ordering};
+use std::collections::{BinaryHeap, VecDeque};
 use std::fmt;
+use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum CellState {
     Empty,
     Blocked,
@@ -64,6 +64,14 @@ impl Direction {
         }
     }
 
+    fn will_cross(&self, state: &CellState) -> bool {
+        use Direction::*;
+        match self {
+            L | R => *state == CellState::UD,
+            U | D => *state == CellState::LR,
+        }
+    }
+
     fn offset(&self) -> (isize, isize) {
         use Direction::*;
         match self {
@@ -100,6 +108,31 @@ pub struct Maze {
     map: Vec<Vec<CellState>>,
     pub m: usize,
     pub n: usize,
+}
+
+#[derive(Eq)]
+struct LeeMinCrossingState {
+    x: usize,
+    y: usize,
+    crosses: usize,
+}
+
+impl Ord for LeeMinCrossingState {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.crosses.cmp(&self.crosses)
+    }
+}
+
+impl PartialOrd for LeeMinCrossingState {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        other.crosses.partial_cmp(&self.crosses)
+    }
+}
+
+impl PartialEq for LeeMinCrossingState {
+    fn eq(&self, other: &Self) -> bool {
+        self.crosses == other.crosses
+    }
 }
 
 #[wasm_bindgen]
@@ -141,7 +174,7 @@ impl Maze {
         }
     }
 
-    // Lee's algorithm, can cross lines
+    // Lee's algorithm, find shortest path
     pub fn lee(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
         use Direction::*;
         if self.map[x1][y1] != CellState::Empty || self.map[x2][y2] != CellState::Empty {
@@ -201,6 +234,76 @@ impl Maze {
         }
         false
     }
+
+    // Lee's algorithm, find shortest path with minimum crossing
+    pub fn lee_minimum_crossing(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
+        use Direction::*;
+        if self.map[x1][y1] != CellState::Empty || self.map[x2][y2] != CellState::Empty {
+            return false;
+        }
+        if x1 == x2 && y1 == y2 {
+            self.map[x1][y1] = CellState::Blocked;
+            return true;
+        }
+
+        let mut queue = BinaryHeap::new();
+        let mut dir_map = vec![vec![None; self.n]; self.m];
+        dir_map[x1][y1] = Some(L);
+        queue.push(LeeMinCrossingState {
+            x: x1,
+            y: y1,
+            crosses: 0,
+        });
+        let m = self.m as isize;
+        let n = self.n as isize;
+        while let Some(LeeMinCrossingState { x, y, crosses }) = queue.pop() {
+            if x == x2 && y == y2 {
+                // found
+                let mut direction = dir_map[x][y].unwrap();
+                let mut cur_x = x;
+                let mut cur_y = y;
+                while cur_x != x1 || cur_y != y1 {
+                    let (dx, dy) = direction.offset();
+                    let new_x = (cur_x as isize + dx) as usize;
+                    let new_y = (cur_y as isize + dy) as usize;
+                    let new_direction = dir_map[new_x][new_y].unwrap();
+                    self.map[new_x][new_y] =
+                        new_direction.get_new_cell_state(&direction, &self.map[new_x][new_y]);
+                    cur_x = new_x;
+                    cur_y = new_y;
+                    direction = new_direction;
+                }
+
+                self.map[x1][y1] = CellState::Blocked;
+                self.map[x2][y2] = CellState::Blocked;
+                return true;
+            }
+
+            let x = x as isize;
+            let y: isize = y as isize;
+            for direction in &[L, R, U, D] {
+                let (dx, dy) = direction.offset();
+                let new_x = x + dx;
+                let new_y = y + dy;
+                if 0 <= new_x && new_x < m && 0 <= new_y && new_y < n {
+                    let new_x = new_x as usize;
+                    let new_y = new_y as usize;
+                    if dir_map[new_x][new_y].is_none()
+                        && direction.can_cross(&self.map[new_x][new_y])
+                    {
+                        dir_map[new_x as usize][new_y as usize] = Some(direction.opposite());
+                        queue.push(LeeMinCrossingState {
+                            x: new_x,
+                            y: new_y,
+                            crosses: crosses
+                                + direction.will_cross(&self.map[new_x][new_y]) as usize,
+                        });
+                    }
+                }
+            }
+        }
+        false
+    }
 }
 
 impl fmt::Display for Maze {
@@ -226,5 +329,19 @@ mod tests {
         assert!(maze.lee(0, 1, 2, 0));
         println!("{}", maze);
         assert!(!maze.lee(0, 2, 2, 2));
+    }
+
+    #[test]
+    fn lee_min_crossing() {
+        let mut maze = Maze::new(4, 4);
+        assert!(maze.lee(0, 1, 2, 1));
+        println!("{}", maze);
+        let mut maze_orig = maze.clone();
+        assert!(maze_orig.lee(1, 0, 1, 2));
+        println!("{}", maze);
+        assert_eq!(maze_orig.get(3, 1), CellState::Empty);
+        assert!(maze.lee_minimum_crossing(1, 0, 1, 2));
+        println!("{}", maze);
+        assert_eq!(maze.get(3, 1), CellState::UD);
     }
 }
