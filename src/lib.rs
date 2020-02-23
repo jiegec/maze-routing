@@ -115,23 +115,28 @@ struct LeeMinCrossingState {
     x: usize,
     y: usize,
     crosses: usize,
+    dist: usize,
 }
 
 impl Ord for LeeMinCrossingState {
     fn cmp(&self, other: &Self) -> Ordering {
-        other.crosses.cmp(&self.crosses)
+        // from small to big
+        match other.crosses.cmp(&self.crosses) {
+            Ordering::Equal => other.dist.cmp(&self.dist),
+            res @ _ => res
+        }
     }
 }
 
 impl PartialOrd for LeeMinCrossingState {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        other.crosses.partial_cmp(&self.crosses)
+        Some(self.cmp(other))
     }
 }
 
 impl PartialEq for LeeMinCrossingState {
     fn eq(&self, other: &Self) -> bool {
-        self.crosses == other.crosses
+        self.crosses == other.crosses && self.dist == other.dist
     }
 }
 
@@ -253,10 +258,17 @@ impl Maze {
             x: x1,
             y: y1,
             crosses: 0,
+            dist: 0,
         });
         let m = self.m as isize;
         let n = self.n as isize;
-        while let Some(LeeMinCrossingState { x, y, crosses }) = queue.pop() {
+        while let Some(LeeMinCrossingState {
+            x,
+            y,
+            crosses,
+            dist,
+        }) = queue.pop()
+        {
             if x == x2 && y == y2 {
                 // found
                 let mut direction = dir_map[x][y].unwrap();
@@ -297,6 +309,7 @@ impl Maze {
                             y: new_y,
                             crosses: crosses
                                 + direction.will_cross(&self.map[new_x][new_y]) as usize,
+                            dist: dist + 1,
                         });
                     }
                 }

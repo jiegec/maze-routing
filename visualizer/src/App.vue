@@ -2,6 +2,10 @@
   <div id="app">
     <button v-on:click="connect">Connect</button>
     <button v-on:click="reset">Reset</button>
+    <select v-model="algo_select">
+      <option value="lee">Lee</option>
+      <option value="lee_minimum_crossing">Lee with Minimum Crossing</option>
+    </select>
     <canvas ref="canvas" width="500" height="500" v-on:click="clickCanvas"></canvas>
   </div>
 </template>
@@ -15,13 +19,27 @@ export default {
     m: 8,
     n: 8,
     maze: null,
-    selected: null
+    selected: null,
+    algo_select: "lee",
+    algo: null
   }),
 
   async mounted() {
     mod = await import("maze-routing");
     this.maze = new mod.Maze(this.m, this.n);
+    this.algo = this.maze.lee;
     this.draw();
+  },
+
+  watch: {
+    algo_select() {
+      console.log(this.maze);
+      if (this.algo_select === "lee") {
+        this.algo = this.maze.lee;
+      } else {
+        this.algo = this.maze.lee_minimum_crossing;
+      }
+    }
   },
 
   methods: {
@@ -50,7 +68,12 @@ export default {
             this.maze.get(x, y) == mod.CellState.Empty
           ) {
             if (this.selected) {
-              this.maze.lee(this.selected.x, this.selected.y, x, y);
+              this.algo.apply(this.maze, [
+                this.selected.x,
+                this.selected.y,
+                x,
+                y
+              ]);
               this.selected = null;
             } else {
               this.selected = {
@@ -72,10 +95,14 @@ export default {
             let posX = this.getPosX(x);
             let posY = this.getPosY(y);
             ctx.beginPath();
-            if (this.selected && this.selected.x === x && this.selected.y === y) {
-              ctx.strokeStyle = 'red';
+            if (
+              this.selected &&
+              this.selected.x === x &&
+              this.selected.y === y
+            ) {
+              ctx.strokeStyle = "red";
             } else {
-              ctx.strokeStyle = 'black';
+              ctx.strokeStyle = "black";
             }
             if (cell === mod.CellState.Empty) {
               ctx.arc(posX, posY, 5, 0, 360);
@@ -124,7 +151,7 @@ export default {
       let x2 = Math.floor(Math.random() * Math.floor(this.m));
       let y1 = Math.floor(Math.random() * Math.floor(this.n));
       let y2 = Math.floor(Math.random() * Math.floor(this.n));
-      this.maze.lee(x1, y1, x2, y2);
+      this.algo.apply(this.maze, [x1, y1, x2, y2]);
     },
     reset() {
       this.maze = new mod.Maze(this.m, this.n);
