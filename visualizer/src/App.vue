@@ -5,6 +5,7 @@
     <select v-model="algo_select">
       <option value="lee">Lee</option>
       <option value="lee_minimum_crossing">Lee with Minimum Crossing</option>
+      <option value="hadlock">Hadlock</option>
     </select>
     <canvas ref="canvas" width="500" height="500" v-on:click="clickCanvas"></canvas>
   </div>
@@ -36,8 +37,10 @@ export default {
       console.log(this.maze);
       if (this.algo_select === "lee") {
         this.algo = this.maze.lee;
-      } else {
+      } else if (this.algo_select === "lee_minimum_crossing") {
         this.algo = this.maze.lee_minimum_crossing;
+      } else {
+        this.algo = this.maze.hadlock;
       }
     }
   },
