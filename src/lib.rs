@@ -23,7 +23,7 @@ impl fmt::Display for CellState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use CellState::*;
         let ch = match self {
-            Empty => ' ',
+            Empty => '.',
             Blocked => 'x',
             Cross => '╋',
             LR => '━',
@@ -424,6 +424,12 @@ impl Maze {
         }
         false
     }
+
+    /// Soukup, Jiri. (1978). Fast Maze Router. Proc. DAC. 100- 102. 10.1109/DAC.1978.1585154.
+    /// Soukup's algorithm, find one path
+    pub fn soukup(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
+        false
+    }
 }
 
 impl fmt::Display for Maze {
@@ -474,5 +480,17 @@ mod tests {
         assert!(maze.hadlock(0, 1, 2, 0));
         println!("{}", maze);
         assert!(!maze.hadlock(0, 2, 2, 2));
+
+        // taken from http://cc.ee.ntu.edu.tw/~jhjiang/instruction/courses/spring11-eda/lec06-3_4p.pdf
+        let mut maze = Maze::new(13, 13);
+        maze.fill(5, 0, 5, 4);
+        maze.fill(3, 5, 5, 5);
+        maze.fill(5, 6, 5, 8);
+        maze.fill(5, 11, 8, 11);
+        maze.fill(6, 10, 6, 10);
+        assert!(maze.hadlock(3, 4, 9, 6));
+        println!("{}", maze);
+        assert_eq!(maze.get(2, 4), CellState::RU);
+        assert_eq!(maze.get(4, 6), CellState::LU);
     }
 }
