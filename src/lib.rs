@@ -3,6 +3,7 @@ use std::cmp::{max, min};
 use std::collections::VecDeque;
 use std::fmt;
 
+#[wasm_bindgen]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum CellState {
     Empty,
@@ -97,19 +98,24 @@ impl Direction {
 #[derive(Clone)]
 pub struct Maze {
     map: Vec<Vec<CellState>>,
-    m: usize,
-    n: usize,
+    pub m: usize,
+    pub n: usize,
 }
 
 #[wasm_bindgen]
 impl Maze {
     /// Create maze of m x n
+    #[wasm_bindgen(constructor)]
     pub fn new(m: usize, n: usize) -> Maze {
         Maze {
             map: vec![vec![CellState::Empty; n]; m],
             m,
             n,
         }
+    }
+
+    pub fn get(&self, x: usize, y: usize) -> CellState {
+        self.map[x][y]
     }
 
     /// fills all points in rectangle (x1, y1) to (x2, y2) to blocked
@@ -138,6 +144,14 @@ impl Maze {
     // Lee's algorithm, can cross lines
     pub fn lee(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
         use Direction::*;
+        if self.map[x1][y1] != CellState::Empty || self.map[x2][y2] != CellState::Empty {
+            return false;
+        }
+        if x1 == x2 && y1 == y2 {
+            self.map[x1][y1] = CellState::Blocked;
+            return true;
+        }
+
         let mut queue = VecDeque::new();
         let mut dir_map = vec![vec![None; self.n]; self.m];
         dir_map[x1][y1] = Some(L);
