@@ -1,3 +1,4 @@
+//! C. Y. Lee, "An Algorithm for Path Connections and Its Applications," in IRE Transactions on Electronic Computers, vol. EC-10, no. 3, pp. 346-365, Sept. 1961.
 use super::*;
 
 #[derive(Eq)]
@@ -33,7 +34,6 @@ impl PartialEq for LeeMinCrossingState {
 #[wasm_bindgen]
 impl Maze {
 
-    /// C. Y. Lee, "An Algorithm for Path Connections and Its Applications," in IRE Transactions on Electronic Computers, vol. EC-10, no. 3, pp. 346-365, Sept. 1961.
     /// Lee's algorithm, find shortest path
     pub fn lee(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
         use Direction::*;

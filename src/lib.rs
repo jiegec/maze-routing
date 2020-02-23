@@ -1,13 +1,15 @@
+use serde_derive::{Deserialize, Serialize};
 use std::cmp::{max, min, Ordering};
 use std::collections::{BinaryHeap, VecDeque};
 use std::fmt;
 use wasm_bindgen::prelude::*;
 
-mod lee;
 mod hadlock;
+mod lee;
+mod soukup;
 
 #[wasm_bindgen]
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum CellState {
     Empty,
     Blocked,
@@ -130,7 +132,7 @@ impl Maze {
     }
 
     /// fills all points in rectangle (x1, y1) to (x2, y2) to blocked
-    pub fn fill(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
+    pub fn fill_mut(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
         let from_x = min(x1, x2);
         let to_x = max(x1, x2);
         let from_y = min(y1, y2);
@@ -144,18 +146,20 @@ impl Maze {
         }
     }
 
-    pub fn clear(&mut self) {
+    /// fills all points in rectangle (x1, y1) to (x2, y2) to blocked
+    pub fn fill(&self, x1: usize, y1: usize, x2: usize, y2: usize) -> Maze {
+        let mut inst = self.clone();
+        inst.fill_mut(x1, y1, x2, y2);
+        inst
+    }
+
+    /// set all cells to empty
+    pub fn clear_mut(&mut self) {
         for line in &mut self.map {
             for item in line {
                 *item = CellState::Empty;
             }
         }
-    }
-
-    /// Soukup, Jiri. (1978). Fast Maze Router. Proc. DAC. 100- 102. 10.1109/DAC.1978.1585154.
-    /// Soukup's algorithm, find one path
-    pub fn soukup(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
-        false
     }
 }
 
@@ -168,5 +172,18 @@ impl fmt::Display for Maze {
             writeln!(f, "")?;
         }
         Ok(())
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Serialize, Deserialize)]
+pub struct ChangeSet {
+    diff_map: Vec<(usize, usize, CellState)>,
+}
+
+#[wasm_bindgen]
+impl ChangeSet {
+    pub fn to_js(&self) -> JsValue {
+        JsValue::from_serde(&self.diff_map).unwrap()
     }
 }

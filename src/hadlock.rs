@@ -1,3 +1,4 @@
+//! Hadlock, Frank O.. “A shortest path algorithm for grid graphs.” Networks 7 (1977): 323-334.
 use super::*;
 
 fn manhattan_dist(x1: usize, y1: usize, x2: usize, y2: usize) -> usize {
@@ -32,7 +33,6 @@ impl PartialEq for HadlockCrossingState {
 
 #[wasm_bindgen]
 impl Maze {
-    /// Hadlock, Frank O.. “A shortest path algorithm for grid graphs.” Networks 7 (1977): 323-334.
     /// Hadlock's algorithm, find shortest path like a*
     pub fn hadlock(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
         use Direction::*;
