@@ -161,6 +161,12 @@ impl Maze {
             }
         }
     }
+
+    pub fn apply(&mut self, changes: &ChangeSet) {
+        for (x, y, state) in &changes.changes {
+            self.map[*x][*y] = *state;
+        }
+    }
 }
 
 impl fmt::Display for Maze {
@@ -178,12 +184,12 @@ impl fmt::Display for Maze {
 #[wasm_bindgen]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ChangeSet {
-    diff_map: Vec<(usize, usize, CellState)>,
+    changes: Vec<(usize, usize, CellState)>,
 }
 
 #[wasm_bindgen]
 impl ChangeSet {
     pub fn to_js(&self) -> JsValue {
-        JsValue::from_serde(&self.diff_map).unwrap()
+        JsValue::from_serde(&self.changes).unwrap()
     }
 }

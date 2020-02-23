@@ -123,11 +123,11 @@ mod tests {
 
         // taken from http://cc.ee.ntu.edu.tw/~jhjiang/instruction/courses/spring11-eda/lec06-3_4p.pdf
         let mut maze = Maze::new(13, 13);
-        maze.fill(5, 0, 5, 4);
-        maze.fill(3, 5, 5, 5);
-        maze.fill(5, 6, 5, 8);
-        maze.fill(5, 11, 8, 11);
-        maze.fill(6, 10, 6, 10);
+        maze.fill_mut(5, 0, 5, 4);
+        maze.fill_mut(3, 5, 5, 5);
+        maze.fill_mut(5, 6, 5, 8);
+        maze.fill_mut(5, 11, 8, 11);
+        maze.fill_mut(6, 10, 6, 10);
         assert!(maze.hadlock(3, 4, 9, 6));
         println!("{}", maze);
         assert_eq!(maze.get(2, 4), CellState::RU);
