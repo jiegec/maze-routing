@@ -1,3 +1,4 @@
+use wasm_bindgen::prelude::*;
 use std::cmp::{max, min};
 use std::collections::VecDeque;
 use std::fmt;
@@ -92,6 +93,7 @@ impl Direction {
     }
 }
 
+#[wasm_bindgen]
 #[derive(Clone)]
 pub struct Maze {
     map: Vec<Vec<CellState>>,
@@ -99,6 +101,7 @@ pub struct Maze {
     n: usize,
 }
 
+#[wasm_bindgen]
 impl Maze {
     /// Create maze of m x n
     pub fn new(m: usize, n: usize) -> Maze {
