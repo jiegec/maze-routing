@@ -61,10 +61,13 @@ impl Maze {
                 let mut direction = dir_map[x][y].unwrap();
                 let mut cur_x = x;
                 let mut cur_y = y;
-                while cur_x != x1 || cur_y != y1 {
+                loop {
                     let (dx, dy) = direction.offset();
                     let new_x = (cur_x as isize + dx) as usize;
                     let new_y = (cur_y as isize + dy) as usize;
+                    if new_x == x1 && new_y == y1 {
+                        break;
+                    }
                     let new_direction = dir_map[new_x][new_y].unwrap();
                     changes.push((
                         new_x,

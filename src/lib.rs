@@ -97,22 +97,54 @@ impl Direction {
         }
     }
 
+    fn index(&self) -> usize {
+        use Direction::*;
+        match self {
+            L => 0,
+            R => 1,
+            U => 2,
+            D => 3,
+        }
+    }
+
     fn get_new_cell_state(&self, prev: &Direction, old_state: &CellState) -> CellState {
         use CellState::*;
         use Direction::*;
-        match (self, prev) {
-            (L, L) | (L, R) | (R, L) | (R, R) => match old_state {
-                UD => Cross,
-                _ => LR,
-            },
-            (U, U) | (U, D) | (D, U) | (D, D) => match old_state {
-                LR => Cross,
-                _ => UD,
-            },
-            (L, U) | (D, R) => LD,
-            (L, D) | (U, R) => LU,
-            (R, U) | (D, L) => RD,
-            (R, D) | (U, L) => RU,
+        if *old_state == Blocked {
+            return Blocked;
+        }
+        // L, R, U, D
+        let mut directions = match *old_state {
+            Empty => [false, false, false, false],
+            Cross => [true, true, true, true],
+            LR => [true, true, false, false],
+            UD => [false, false, true, true],
+            LU => [true, false, true, false],
+            LD => [true, false, false, true],
+            RU => [false, true, true, false],
+            RD => [false, true, false, true],
+            LUR => [true, true, true, false],
+            URD => [false, true, true, true],
+            RDL => [true, true, false, true],
+            DLU => [true, false, true, true],
+            _ => unreachable!(),
+        };
+        directions[self.index()] = true;
+        directions[prev.opposite().index()] = true;
+        // L, R, U, D
+        match directions {
+            [false, false, true, true] => UD,
+            [false, true, false, true] => RD,
+            [false, true, true, false] => RU,
+            [true, false, false, true] => LD,
+            [true, false, true, false] => LU,
+            [true, true, false, false] => LR,
+            [false, true, true, true] => URD,
+            [true, false, true, true] => DLU,
+            [true, true, false, true] => RDL,
+            [true, true, true, false] => LUR,
+            [true, true, true, true] => Cross,
+            _ => unreachable!(),
         }
     }
 }

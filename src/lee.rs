@@ -1,5 +1,6 @@
 //! C. Y. Lee, "An Algorithm for Path Connections and Its Applications," in IRE Transactions on Electronic Computers, vol. EC-10, no. 3, pp. 346-365, Sept. 1961.
 use super::*;
+use std::collections::BTreeSet;
 
 #[derive(Eq, PartialEq)]
 struct LeeMinCrossingState {
@@ -342,6 +343,98 @@ impl Maze {
             None => false,
         }
     }
+
+    /// Lee's algorithm, find rectified steiner tree
+    pub fn lee_multi(&self, points: &Points) -> Option<ChangeSet> {
+        use Direction::*;
+        let mut changes = vec![];
+        let points = points.points.clone();
+        if points.len() == 0 {
+            return Some(ChangeSet { changes });
+        } else if points.len() == 1 {
+            changes.push((points[0].0, points[0].1, CellState::Blocked));
+            return Some(ChangeSet { changes });
+        }
+
+        let mut dest_points = BTreeSet::new();
+        for point in &points[1..] {
+            dest_points.insert(point);
+        }
+
+        let mut queue = VecDeque::new();
+        let mut dir_map = vec![vec![None; self.n]; self.m];
+        let mut new_map = self.map.clone();
+        let (x1, y1) = points[0];
+        dir_map[x1][y1] = Some(L);
+        queue.push_back((x1, y1));
+        new_map[x1][y1] = CellState::Blocked;
+        changes.push((x1, y1, CellState::Blocked));
+
+        let m = self.m as isize;
+        let n = self.n as isize;
+        while let Some((x, y)) = queue.pop_front() {
+            if dest_points.contains(&(x, y)) {
+                // found
+                dest_points.remove(&(x, y));
+                new_map[x][y] = CellState::Blocked;
+                changes.push((x, y, CellState::Blocked));
+
+                let mut direction = dir_map[x][y].unwrap();
+                let mut cur_x = x;
+                let mut cur_y = y;
+                loop {
+                    let (dx, dy) = direction.offset();
+                    let new_x = (cur_x as isize + dx) as usize;
+                    let new_y = (cur_y as isize + dy) as usize;
+                    if new_map[new_x][new_y] == CellState::Blocked {
+                        break;
+                    }
+
+                    let new_direction = dir_map[new_x][new_y].unwrap();
+                    let new_cell_state =
+                        new_direction.get_new_cell_state(&direction, &new_map[new_x][new_y]);
+                    new_map[new_x][new_y] = new_cell_state;
+                    changes.push((new_x, new_y, new_cell_state));
+                    cur_x = new_x;
+                    cur_y = new_y;
+                    direction = new_direction;
+                }
+
+                if dest_points.len() == 0 {
+                    return Some(ChangeSet { changes: changes });
+                }
+            }
+
+            let x = x as isize;
+            let y: isize = y as isize;
+            for direction in &[L, R, U, D] {
+                let (dx, dy) = direction.offset();
+                let new_x = x + dx;
+                let new_y = y + dy;
+                if 0 <= new_x && new_x < m && 0 <= new_y && new_y < n {
+                    let new_x = new_x as usize;
+                    let new_y = new_y as usize;
+                    if dir_map[new_x][new_y].is_none()
+                        && direction.can_cross(&new_map[new_x][new_y])
+                    {
+                        dir_map[new_x as usize][new_y as usize] = Some(direction.opposite());
+                        queue.push_back((new_x, new_y));
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    pub fn lee_multi_mut(&mut self, points: &Points) -> bool {
+        match self.lee_multi(points) {
+            Some(changes) => {
+                self.apply(&changes);
+                true
+            }
+            None => false,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -386,6 +479,38 @@ mod tests {
 
         let mut maze = Maze::new(5, 5);
         assert!(maze.lee_minimum_edge_effect_mut(0, 0, 4, 4));
+        println!("{}", maze);
+    }
+
+    #[test]
+    fn lee_multi() {
+        let mut maze = Maze::new(3, 3);
+        assert!(maze.lee_multi_mut(&Points {
+            points: vec![(0, 0), (1, 1), (2, 2)]
+        }));
+        println!("{}", maze);
+        assert!(!maze.lee_multi_mut(&Points {
+            points: vec![(2, 0), (0, 2)]
+        }));
+
+        let mut maze = Maze::new(5, 5);
+        assert!(maze.lee_multi_mut(&Points {
+            points: vec![(0, 2), (1, 1), (2, 0), (2, 2), (3, 4), (4, 0), (4, 4)]
+        }));
+        println!("{}", maze);
+        assert!(maze.lee_multi_mut(&Points {
+            points: vec![(0, 3), (2, 3)]
+        }));
+        println!("{}", maze);
+
+        let mut maze = Maze::new(5, 5);
+        assert!(maze.lee_multi_mut(&Points {
+            points: vec![(0, 2), (1, 1), (2, 0), (2, 2), (3, 4), (4, 0)]
+        }));
+        println!("{}", maze);
+        assert!(maze.lee_multi_mut(&Points {
+            points: vec![(0, 3), (4, 3)]
+        }));
         println!("{}", maze);
     }
 }
