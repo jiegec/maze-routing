@@ -27,7 +27,7 @@ pub enum CellState {
     LUR,
     URD,
     RDL,
-    DLU
+    DLU,
 }
 
 impl fmt::Display for CellState {
@@ -216,9 +216,26 @@ impl Points {
         JsValue::from_serde(&self.points).unwrap()
     }
 
-    pub fn from_js(js: JsValue) -> Option<Points> {
-        JsValue::into_serde(&js).ok().map(|points| Points {
-            points
-        })
+    #[wasm_bindgen(constructor)]
+    pub fn from_js(js: JsValue) -> Points {
+        JsValue::into_serde(&js)
+            .ok()
+            .map(|points| Points { points }).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json;
+
+    #[test]
+    fn serde_points() {
+        println!(
+            "{}",
+            serde_json::to_string(&Points {
+                points: vec![(1, 2), (3, 4)]
+            }).unwrap()
+        );
     }
 }

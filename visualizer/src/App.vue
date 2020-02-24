@@ -1,11 +1,13 @@
 <template>
   <div id="app">
-    <button v-on:click="connect">Connect</button>
+    <button v-on:click="connect">Random Connect</button>
     <button v-on:click="reset">Reset</button>
+    <button v-on:click="submit">Submit</button>
     <select v-model="algo_select">
       <option value="lee">Lee</option>
       <option value="lee_minimum_crossing">Lee with Minimum Crossing</option>
       <option value="hadlock">Hadlock</option>
+      <option value="stst">STST</option>
     </select>
     <canvas ref="canvas" width="500" height="500" v-on:click="clickCanvas"></canvas>
   </div>
@@ -20,7 +22,7 @@ export default {
     m: 8,
     n: 8,
     maze: null,
-    selected: null,
+    selected: [],
     algo_select: "lee",
     algo: null
   }),
@@ -38,8 +40,20 @@ export default {
         this.algo = this.maze.lee_mut;
       } else if (this.algo_select === "lee_minimum_crossing") {
         this.algo = this.maze.lee_minimum_crossing_mut;
-      } else {
+      } else if (this.algo_select === "hadlock") {
         this.algo = this.maze.hadlock_mut;
+      } else if (this.algo_select === "stst") {
+        this.algo = function() {
+          let arg = [];
+          for (let i = 0; i < arguments.length; i += 2) {
+            arg.push([arguments[i], arguments[i + 1]]);
+          }
+          let points = new mod.Points(arg);
+          this.stst_mut(points);
+          console.log(this, arguments, points);
+        };
+      } else {
+        this.algo = null;
       }
     }
   },
@@ -66,23 +80,11 @@ export default {
           const posX = this.getPosX(x);
           const posY = this.getPosY(y);
           if (
-            Math.pow(posX - canvasX, 2) + Math.pow(posY - canvasY, 2) < 50 &&
+            Math.pow(posX - canvasX, 2) + Math.pow(posY - canvasY, 2) < 80 &&
             this.maze.get(x, y) == mod.CellState.Empty
           ) {
-            if (this.selected) {
-              this.algo.apply(this.maze, [
-                this.selected.x,
-                this.selected.y,
-                x,
-                y
-              ]);
-              this.selected = null;
-            } else {
-              this.selected = {
-                x,
-                y
-              };
-            }
+            this.selected.push(x);
+            this.selected.push(y);
           }
         }
       }
@@ -97,14 +99,12 @@ export default {
             let posX = this.getPosX(x);
             let posY = this.getPosY(y);
             ctx.beginPath();
-            if (
-              this.selected &&
-              this.selected.x === x &&
-              this.selected.y === y
-            ) {
-              ctx.strokeStyle = "red";
-            } else {
-              ctx.strokeStyle = "black";
+            ctx.strokeStyle = "black";
+            for (let i = 0; i < this.selected.length; i += 2) {
+              if (x == this.selected[i] && y == this.selected[i + 1]) {
+                ctx.strokeStyle = "red";
+                break;
+              }
             }
             if (cell === mod.CellState.Empty) {
               ctx.arc(posX, posY, 5, 0, 360);
@@ -141,6 +141,26 @@ export default {
               ctx.lineTo((this.getPosX(x + 1) + posX) / 2, posY);
               ctx.moveTo(posX, (this.getPosY(y - 1) + posY) / 2);
               ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
+            } else if (cell == mod.CellState.LUR) {
+              ctx.moveTo((this.getPosX(x - 1) + posX) / 2, posY);
+              ctx.lineTo((this.getPosX(x + 1) + posX) / 2, posY);
+              ctx.moveTo(posX, posY);
+              ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
+            } else if (cell == mod.CellState.RDL) {
+              ctx.moveTo((this.getPosX(x - 1) + posX) / 2, posY);
+              ctx.lineTo((this.getPosX(x + 1) + posX) / 2, posY);
+              ctx.moveTo(posX, posY);
+              ctx.lineTo(posX, (this.getPosY(y - 1) + posY) / 2);
+            } else if (cell == mod.CellState.URD) {
+              ctx.moveTo(posX, (this.getPosY(y - 1) + posY) / 2);
+              ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
+              ctx.moveTo(posX, posY);
+              ctx.lineTo((this.getPosX(x + 1) + posX) / 2, posY);
+            } else if (cell == mod.CellState.DLU) {
+              ctx.moveTo(posX, (this.getPosY(y - 1) + posY) / 2);
+              ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
+              ctx.moveTo(posX, posY);
+              ctx.lineTo((this.getPosX(x - 1) + posX) / 2, posY);
             }
             ctx.stroke();
           }
@@ -157,6 +177,10 @@ export default {
     },
     reset() {
       this.maze = new mod.Maze(this.m, this.n);
+    },
+    submit() {
+      this.algo.apply(this.maze, this.selected);
+      this.selected = [];
     }
   }
 };

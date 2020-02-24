@@ -2,6 +2,7 @@
 
 use super::*;
 
+#[wasm_bindgen]
 impl Maze {
     pub fn stst(&self, points: &Points) -> Option<ChangeSet> {
         use CellState::*;
