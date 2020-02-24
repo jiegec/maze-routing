@@ -28,19 +28,18 @@ export default {
   async mounted() {
     mod = await import("maze-routing");
     this.maze = new mod.Maze(this.m, this.n);
-    this.algo = this.maze.lee;
+    this.algo = this.maze.lee_mut;
     this.draw();
   },
 
   watch: {
     algo_select() {
-      console.log(this.maze);
       if (this.algo_select === "lee") {
-        this.algo = this.maze.lee;
+        this.algo = this.maze.lee_mut;
       } else if (this.algo_select === "lee_minimum_crossing") {
-        this.algo = this.maze.lee_minimum_crossing;
+        this.algo = this.maze.lee_minimum_crossing_mut;
       } else {
-        this.algo = this.maze.hadlock;
+        this.algo = this.maze.hadlock_mut;
       }
     }
   },

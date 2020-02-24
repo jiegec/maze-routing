@@ -112,14 +112,15 @@ impl Maze {
     }
 
     /// Lee's algorithm, find shortest path with minimum crossing
-    pub fn lee_minimum_crossing(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
+    pub fn lee_minimum_crossing(&self, x1: usize, y1: usize, x2: usize, y2: usize) -> Option<ChangeSet> {
         use Direction::*;
+        let mut changes = vec![];
         if self.map[x1][y1] != CellState::Empty || self.map[x2][y2] != CellState::Empty {
-            return false;
+            return None;
         }
         if x1 == x2 && y1 == y2 {
-            self.map[x1][y1] = CellState::Blocked;
-            return true;
+            changes.push((x1, y1, CellState::Blocked));
+            return Some(ChangeSet { changes: changes });
         }
 
         let mut queue = BinaryHeap::new();
@@ -150,16 +151,17 @@ impl Maze {
                     let new_x = (cur_x as isize + dx) as usize;
                     let new_y = (cur_y as isize + dy) as usize;
                     let new_direction = dir_map[new_x][new_y].unwrap();
-                    self.map[new_x][new_y] =
-                        new_direction.get_new_cell_state(&direction, &self.map[new_x][new_y]);
+                    changes.push((new_x, new_y, new_direction.get_new_cell_state(&direction, &self.map[new_x][new_y])));
                     cur_x = new_x;
                     cur_y = new_y;
                     direction = new_direction;
                 }
 
-                self.map[x1][y1] = CellState::Blocked;
-                self.map[x2][y2] = CellState::Blocked;
-                return true;
+                changes.push((x1, y1, CellState::Blocked));
+                changes.push((x2, y2, CellState::Blocked));
+                return Some(ChangeSet {
+                    changes
+                });
             }
 
             let x = x as isize;
@@ -186,7 +188,18 @@ impl Maze {
                 }
             }
         }
-        false
+        None
+    }
+
+    /// Lee's algorithm, find shortest path with minimum crossing
+    pub fn lee_minimum_crossing_mut(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
+        match self.lee_minimum_crossing(x1, y1, x2, y2) {
+            Some(changes) => {
+                self.apply(&changes);
+                true
+            }
+            None => false,
+        }
     }
 }
 
@@ -213,7 +226,7 @@ mod tests {
         assert!(maze_orig.lee_mut(1, 0, 1, 2));
         println!("{}", maze);
         assert_eq!(maze_orig.get(3, 1), CellState::Empty);
-        assert!(maze.lee_minimum_crossing(1, 0, 1, 2));
+        assert!(maze.lee_minimum_crossing_mut(1, 0, 1, 2));
         println!("{}", maze);
         assert_eq!(maze.get(3, 1), CellState::UD);
     }

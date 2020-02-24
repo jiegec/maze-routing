@@ -34,14 +34,17 @@ impl PartialEq for HadlockCrossingState {
 #[wasm_bindgen]
 impl Maze {
     /// Hadlock's algorithm, find shortest path like a*
-    pub fn hadlock(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
+    pub fn hadlock(&self, x1: usize, y1: usize, x2: usize, y2: usize) -> Option<ChangeSet> {
         use Direction::*;
+        let mut changes = vec![];
         if self.map[x1][y1] != CellState::Empty || self.map[x2][y2] != CellState::Empty {
-            return false;
+            return None;
         }
         if x1 == x2 && y1 == y2 {
-            self.map[x1][y1] = CellState::Blocked;
-            return true;
+            changes.push((x1, y1, CellState::Blocked));
+            return Some(ChangeSet {
+                changes
+            });
         }
 
         let mut queue = BinaryHeap::new();
@@ -65,16 +68,17 @@ impl Maze {
                     let new_x = (cur_x as isize + dx) as usize;
                     let new_y = (cur_y as isize + dy) as usize;
                     let new_direction = dir_map[new_x][new_y].unwrap();
-                    self.map[new_x][new_y] =
-                        new_direction.get_new_cell_state(&direction, &self.map[new_x][new_y]);
+                    changes.push((new_x, new_y, new_direction.get_new_cell_state(&direction, &self.map[new_x][new_y])));
                     cur_x = new_x;
                     cur_y = new_y;
                     direction = new_direction;
                 }
 
-                self.map[x1][y1] = CellState::Blocked;
-                self.map[x2][y2] = CellState::Blocked;
-                return true;
+                changes.push((x1, y1, CellState::Blocked));
+                changes.push((x2, y2, CellState::Blocked));
+                return Some(ChangeSet {
+                    changes
+                });
             }
 
             let x = x as isize;
@@ -105,7 +109,17 @@ impl Maze {
                 }
             }
         }
-        false
+        None
+    }
+
+    pub fn hadlock_mut(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
+        match self.hadlock(x1, y1, x2, y2) {
+            Some(changes) => {
+                self.apply(&changes);
+                true
+            }
+            None => false,
+        }
     }
 }
 
@@ -115,11 +129,11 @@ mod tests {
     #[test]
     fn hadlock() {
         let mut maze = Maze::new(3, 3);
-        assert!(maze.hadlock(1, 0, 1, 2));
+        assert!(maze.hadlock_mut(1, 0, 1, 2));
         println!("{}", maze);
-        assert!(maze.hadlock(0, 1, 2, 0));
+        assert!(maze.hadlock_mut(0, 1, 2, 0));
         println!("{}", maze);
-        assert!(!maze.hadlock(0, 2, 2, 2));
+        assert!(!maze.hadlock_mut(0, 2, 2, 2));
 
         // taken from http://cc.ee.ntu.edu.tw/~jhjiang/instruction/courses/spring11-eda/lec06-3_4p.pdf
         let mut maze = Maze::new(13, 13);
@@ -128,7 +142,7 @@ mod tests {
         maze.fill_mut(5, 6, 5, 8);
         maze.fill_mut(5, 11, 8, 11);
         maze.fill_mut(6, 10, 6, 10);
-        assert!(maze.hadlock(3, 4, 9, 6));
+        assert!(maze.hadlock_mut(3, 4, 9, 6));
         println!("{}", maze);
         assert_eq!(maze.get(2, 4), CellState::RU);
         assert_eq!(maze.get(4, 6), CellState::LU);
