@@ -1,7 +1,7 @@
 //! C. Y. Lee, "An Algorithm for Path Connections and Its Applications," in IRE Transactions on Electronic Computers, vol. EC-10, no. 3, pp. 346-365, Sept. 1961.
 use super::*;
 
-#[derive(Eq)]
+#[derive(Eq, PartialEq)]
 struct LeeMinCrossingState {
     x: usize,
     y: usize,
@@ -13,7 +13,13 @@ impl Ord for LeeMinCrossingState {
     fn cmp(&self, other: &Self) -> Ordering {
         // from small to big
         match other.crosses.cmp(&self.crosses) {
-            Ordering::Equal => other.dist.cmp(&self.dist),
+            Ordering::Equal => match other.dist.cmp(&self.dist) {
+                Ordering::Equal => match self.x.cmp(&other.x) {
+                    Ordering::Equal => self.y.cmp(&other.y),
+                    res @ _ => res,
+                },
+                res @ _ => res,
+            },
             res @ _ => res,
         }
     }
@@ -25,13 +31,7 @@ impl PartialOrd for LeeMinCrossingState {
     }
 }
 
-impl PartialEq for LeeMinCrossingState {
-    fn eq(&self, other: &Self) -> bool {
-        self.crosses == other.crosses && self.dist == other.dist
-    }
-}
-
-#[derive(Eq)]
+#[derive(Eq, PartialEq)]
 struct LeeMinEdgeEffectState {
     x: usize,
     y: usize,
@@ -43,7 +43,13 @@ impl Ord for LeeMinEdgeEffectState {
     fn cmp(&self, other: &Self) -> Ordering {
         // from small to big
         match other.edges.cmp(&self.edges) {
-            Ordering::Equal => other.dist.cmp(&self.dist),
+            Ordering::Equal => match other.dist.cmp(&self.dist) {
+                Ordering::Equal => match self.x.cmp(&other.x) {
+                    Ordering::Equal => self.y.cmp(&other.y),
+                    res @ _ => res,
+                },
+                res @ _ => res,
+            },
             res @ _ => res,
         }
     }
@@ -52,12 +58,6 @@ impl Ord for LeeMinEdgeEffectState {
 impl PartialOrd for LeeMinEdgeEffectState {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
-    }
-}
-
-impl PartialEq for LeeMinEdgeEffectState {
-    fn eq(&self, other: &Self) -> bool {
-        self.edges == other.edges && self.dist == other.dist
     }
 }
 
@@ -383,5 +383,9 @@ mod tests {
         assert!(maze.lee_minimum_edge_effect_mut(0, 0, 2, 2));
         println!("{}", maze);
         assert_eq!(maze.get(0, 2), CellState::UD);
+
+        let mut maze = Maze::new(5, 5);
+        assert!(maze.lee_minimum_edge_effect_mut(0, 0, 4, 4));
+        println!("{}", maze);
     }
 }
