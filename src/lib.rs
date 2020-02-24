@@ -7,6 +7,7 @@ use wasm_bindgen::prelude::*;
 mod hadlock;
 mod lee;
 mod soukup;
+mod stst;
 
 #[wasm_bindgen]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
