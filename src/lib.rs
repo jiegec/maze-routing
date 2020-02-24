@@ -220,7 +220,8 @@ impl Points {
     pub fn from_js(js: JsValue) -> Points {
         JsValue::into_serde(&js)
             .ok()
-            .map(|points| Points { points }).unwrap()
+            .map(|points| Points { points })
+            .unwrap()
     }
 }
 
@@ -235,7 +236,8 @@ mod tests {
             "{}",
             serde_json::to_string(&Points {
                 points: vec![(1, 2), (3, 4)]
-            }).unwrap()
+            })
+            .unwrap()
         );
     }
 }

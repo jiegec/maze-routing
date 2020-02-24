@@ -42,9 +42,7 @@ impl Maze {
         }
         if x1 == x2 && y1 == y2 {
             changes.push((x1, y1, CellState::Blocked));
-            return Some(ChangeSet {
-                changes
-            });
+            return Some(ChangeSet { changes });
         }
 
         let mut queue = BinaryHeap::new();
@@ -68,7 +66,11 @@ impl Maze {
                     let new_x = (cur_x as isize + dx) as usize;
                     let new_y = (cur_y as isize + dy) as usize;
                     let new_direction = dir_map[new_x][new_y].unwrap();
-                    changes.push((new_x, new_y, new_direction.get_new_cell_state(&direction, &self.map[new_x][new_y])));
+                    changes.push((
+                        new_x,
+                        new_y,
+                        new_direction.get_new_cell_state(&direction, &self.map[new_x][new_y]),
+                    ));
                     cur_x = new_x;
                     cur_y = new_y;
                     direction = new_direction;
@@ -76,9 +78,7 @@ impl Maze {
 
                 changes.push((x1, y1, CellState::Blocked));
                 changes.push((x2, y2, CellState::Blocked));
-                return Some(ChangeSet {
-                    changes
-                });
+                return Some(ChangeSet { changes });
             }
 
             let x = x as isize;
