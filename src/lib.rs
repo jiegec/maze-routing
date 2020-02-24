@@ -22,6 +22,11 @@ pub enum CellState {
     RU,
     LD,
     RD,
+    // three directions
+    LUR,
+    URD,
+    RDL,
+    DLU
 }
 
 impl fmt::Display for CellState {
@@ -37,6 +42,10 @@ impl fmt::Display for CellState {
             RU => '┗',
             LD => '┓',
             RD => '┏',
+            LUR => '┻',
+            URD => '┣',
+            RDL => '┳',
+            DLU => '┫',
         };
         write!(f, "{}", ch)
     }
@@ -191,5 +200,24 @@ pub struct ChangeSet {
 impl ChangeSet {
     pub fn to_js(&self) -> JsValue {
         JsValue::from_serde(&self.changes).unwrap()
+    }
+}
+
+#[wasm_bindgen]
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Points {
+    points: Vec<(usize, usize)>,
+}
+
+#[wasm_bindgen]
+impl Points {
+    pub fn to_js(&self) -> JsValue {
+        JsValue::from_serde(&self.points).unwrap()
+    }
+
+    pub fn from_js(js: JsValue) -> Option<Points> {
+        JsValue::into_serde(&js).ok().map(|points| Points {
+            points
+        })
     }
 }
