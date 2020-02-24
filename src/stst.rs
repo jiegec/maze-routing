@@ -37,7 +37,7 @@ impl Maze {
         let mut ans: Option<ChangeSet> = None;
 
         // try horizontal
-        for (_point_x, point_y) in &points {
+        'next: for (_point_x, point_y) in &points {
             // construct a trunk from this point
             let mut changes: Vec<(usize, usize, CellState)> = vec![];
             let mut down = vec![false; max_x - min_x + 1];
@@ -54,6 +54,9 @@ impl Maze {
             }
 
             // x = min_x
+            if self.map[min_x][*point_y] != Empty {
+                continue 'next;
+            }
             if on[0] {
                 // handled below
             } else if up[0] && down[0] {
@@ -67,6 +70,9 @@ impl Maze {
             }
 
             // x = max_x
+            if self.map[max_x][*point_y] != Empty {
+                continue 'next;
+            }
             if on[max_x - min_x] {
                 // handled below
             } else if up[max_x - min_x] && down[max_x - min_x] {
@@ -80,6 +86,12 @@ impl Maze {
             }
 
             for x in (min_x + 1)..(max_x) {
+                if self.map[x][*point_y] != Empty
+                    && (on[x - min_x] || up[x - min_x] || down[x - min_x])
+                {
+                    // non-LR
+                    continue 'next;
+                }
                 if on[x - min_x] {
                     // handled below
                 } else if up[x - min_x] && down[x - min_x] {
@@ -89,21 +101,39 @@ impl Maze {
                 } else if down[x - min_x] {
                     changes.push((x, *point_y, RDL));
                 } else {
-                    changes.push((x, *point_y, LR));
+                    if self.map[x][*point_y] == Empty {
+                        changes.push((x, *point_y, LR));
+                    } else if self.map[x][*point_y] == UD {
+                        changes.push((x, *point_y, Cross));
+                    } else {
+                        continue 'next;
+                    }
                 }
             }
 
             for (new_x, new_y) in &points {
                 if new_y == point_y {
-                    // handled above
+                    // handled below
                     continue;
                 } else if new_y > point_y {
                     for y in (point_y + 1)..*new_y {
-                        changes.push((*new_x, y, UD));
+                        if self.map[*new_x][y] == Empty {
+                            changes.push((*new_x, y, UD));
+                        } else if self.map[*new_x][y] == LR {
+                            changes.push((*new_x, y, Cross));
+                        } else {
+                            continue 'next;
+                        }
                     }
                 } else {
                     for y in *new_y..*point_y {
-                        changes.push((*new_x, y, UD));
+                        if self.map[*new_x][y] == Empty {
+                            changes.push((*new_x, y, UD));
+                        } else if self.map[*new_x][y] == LR {
+                            changes.push((*new_x, y, Cross));
+                        } else {
+                            continue 'next;
+                        }
                     }
                 }
             }
@@ -111,6 +141,12 @@ impl Maze {
             for (x, y) in &points {
                 changes.push((*x, *y, Blocked));
             }
+
+            // remove duplicate assignments to one cell
+            changes.sort_by_key(|(x, y, _state)| (*x, *y));
+            changes.reverse();
+            changes.dedup_by_key(|(x, y, _state)| (*x, *y));
+
             match &ans {
                 Some(old) => {
                     if old.changes.len() > changes.len() {
@@ -146,10 +182,27 @@ mod tests {
             points: vec![(0, 0), (1, 1), (2, 2)]
         }));
         println!("{}", maze);
+        assert!(!maze.stst_mut(&Points {
+            points: vec![(2, 0), (0, 2)]
+        }));
 
         let mut maze = Maze::new(5, 5);
         assert!(maze.stst_mut(&Points {
             points: vec![(0, 2), (1, 1), (2, 0), (2, 2), (3, 4), (4, 0), (4, 4)]
+        }));
+        println!("{}", maze);
+        assert!(maze.stst_mut(&Points {
+            points: vec![(0, 3), (2, 3)]
+        }));
+        println!("{}", maze);
+
+        let mut maze = Maze::new(5, 5);
+        assert!(maze.stst_mut(&Points {
+            points: vec![(0, 2), (1, 1), (2, 0), (2, 2), (3, 4), (4, 0)]
+        }));
+        println!("{}", maze);
+        assert!(maze.stst_mut(&Points {
+            points: vec![(0, 3), (4, 3)]
         }));
         println!("{}", maze);
     }
