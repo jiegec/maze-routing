@@ -195,6 +195,28 @@ impl Maze {
         inst
     }
 
+    /// sets all points in rectangle (x1, y1) to (x2, y2) to empty
+    pub fn clean_mut(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
+        let from_x = min(x1, x2);
+        let to_x = max(x1, x2);
+        let from_y = min(y1, y2);
+        let to_y = max(y1, y2);
+        assert!(to_x < self.m);
+        assert!(to_y < self.n);
+        for i in from_x..(to_x + 1) {
+            for j in from_y..(to_y + 1) {
+                self.map[i][j] = CellState::Empty;
+            }
+        }
+    }
+
+    /// sets all points in rectangle (x1, y1) to (x2, y2) to empty
+    pub fn clean(&self, x1: usize, y1: usize, x2: usize, y2: usize) -> Maze {
+        let mut inst = self.clone();
+        inst.clean_mut(x1, y1, x2, y2);
+        inst
+    }
+
     /// set all cells to empty
     pub fn clear_mut(&mut self) {
         for line in &mut self.map {
