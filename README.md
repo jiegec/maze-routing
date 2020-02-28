@@ -4,10 +4,18 @@ Implementation of several grid routers in Rust. Might not follow the original pa
 
 ## Algorithms
 
+Two-pin nets:
+
 1. Lee
-2. Hadlock
-3. Mikami-Tabuchi
-4. Single Trunk Steiner Tree
+2. Lee (minimum crossing)
+3. Lee (minimum edge effect)
+4. Hadlock
+5. Mikami-Tabuchi
+
+Multiple-pin nets:
+
+1. Lee
+2. Single Trunk Steiner Tree
 
 ## References
 

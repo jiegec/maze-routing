@@ -96,6 +96,8 @@ impl Maze {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck::*;
+
     #[test]
     fn mikami_tabuchi() {
         let mut maze = Maze::new(3, 3);
@@ -106,5 +108,18 @@ mod tests {
         maze.fill_mut(2, 0, 2, 0);
         assert!(maze.mikami_tabuchi_mut(0, 0, 2, 2));
         println!("{}", maze);
+    }
+
+    quickcheck! {
+        fn qc_mikami_tabuchi_many(m: usize, n: usize, points: Vec<(usize, usize, usize, usize)>) -> bool {
+            if m == 0 || n == 0 {
+                return true;
+            }
+            let mut maze = Maze::new(m, n);
+            for (x1, y1, x2, y2) in points {
+                maze.mikami_tabuchi_mut(x1 % m, y1 % n, x2 % m, y2 % n);
+            }
+            maze.verify()
+        }
     }
 }
