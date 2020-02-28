@@ -8,7 +8,7 @@ impl Maze {
         use CellState::*;
         let mut points = points.points.clone();
         if points.len() == 0 {
-            return None;
+            return Some(ChangeSet { changes: vec![] });
         }
         points.sort();
         points.dedup();
@@ -175,6 +175,7 @@ impl Maze {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck::*;
 
     #[test]
     fn stst() {
@@ -206,5 +207,29 @@ mod tests {
             points: vec![(0, 3), (4, 3)]
         }));
         println!("{}", maze);
+    }
+
+    #[test]
+    fn stst_regression() {
+        let mut maze = Maze::new(2, 1);
+        assert!(maze.stst_mut(&Points { points: vec![] }));
+        println!("{}", maze);
+    }
+
+    quickcheck! {
+        fn qc_stst(m: usize, n: usize, points: Vec<(usize, usize)>) -> bool {
+            if m == 0 || n == 0 {
+                return true;
+            }
+            let mut points = points.clone();
+            for point in &mut points {
+                point.0 %= m;
+                point.1 %= n;
+            }
+            let mut maze = Maze::new(m, n);
+            maze.stst_mut(&Points {
+                points
+            }) && maze.verify()
+        }
     }
 }
