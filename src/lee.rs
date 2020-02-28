@@ -440,6 +440,7 @@ impl Maze {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck::*;
 
     #[test]
     fn lee_basic() {
@@ -512,5 +513,15 @@ mod tests {
             points: vec![(0, 3), (4, 3)]
         }));
         println!("{}", maze);
+    }
+
+    quickcheck! {
+        fn qc_lee(m: usize, n: usize, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
+            if m == 0 || n == 0 {
+                return true;
+            }
+            let mut maze = Maze::new(m, n);
+            maze.lee_mut(x1 % m, y1 % n, x2 % m, y2 % n) && maze.verify()
+        }
     }
 }

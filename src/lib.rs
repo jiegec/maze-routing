@@ -53,6 +53,28 @@ impl fmt::Display for CellState {
     }
 }
 
+impl CellState {
+    // L, R, U, D
+    fn extract(&self) -> [bool; 4] {
+        use CellState::*;
+        match self {
+            Empty => [false, false, false, false],
+            Blocked => [true, true, true, true],
+            Cross => [true, true, true, true],
+            LR => [true, true, false, false],
+            UD => [false, false, true, true],
+            LU => [true, false, true, false],
+            LD => [true, false, false, true],
+            RU => [false, true, true, false],
+            RD => [false, true, false, true],
+            LUR => [true, true, true, false],
+            URD => [false, true, true, true],
+            RDL => [true, true, false, true],
+            DLU => [true, false, true, true],
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug)]
 pub enum Direction {
     L,
@@ -114,21 +136,7 @@ impl Direction {
             return Blocked;
         }
         // L, R, U, D
-        let mut directions = match *old_state {
-            Empty => [false, false, false, false],
-            Cross => [true, true, true, true],
-            LR => [true, true, false, false],
-            UD => [false, false, true, true],
-            LU => [true, false, true, false],
-            LD => [true, false, false, true],
-            RU => [false, true, true, false],
-            RD => [false, true, false, true],
-            LUR => [true, true, true, false],
-            URD => [false, true, true, true],
-            RDL => [true, true, false, true],
-            DLU => [true, false, true, true],
-            _ => unreachable!(),
-        };
+        let mut directions = old_state.extract();
         directions[self.index()] = true;
         directions[prev.opposite().index()] = true;
         // L, R, U, D
@@ -231,6 +239,37 @@ impl Maze {
             self.map[*x][*y] = *state;
         }
     }
+
+    /// Sanity check
+    pub fn verify(&self) -> bool {
+        use Direction::*;
+        for x in 0..self.m {
+            for y in 0..self.n {
+                if self.map[x][y] == CellState::Blocked || self.map[x][y] == CellState::Empty {
+                    continue;
+                }
+                // L, R, U, D
+                let ways = self.map[x][y].extract();
+                let dirs = [L, R, U, D];
+                for i in 0..4 {
+                    if ways[i] {
+                        let (dx, dy) = dirs[i].offset();
+                        let nx = x as isize + dx;
+                        let ny = y as isize + dy;
+                        if nx < 0 || nx >= self.m as isize || ny < 0 || ny >= self.n as isize {
+                            return false;
+                        }
+                        let cell = self.map[nx as usize][ny as usize];
+                        let ways_other = cell.extract();
+                        if !ways_other[dirs[i].opposite().index()] {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        true
+    }
 }
 
 impl fmt::Display for Maze {
@@ -282,6 +321,7 @@ impl Points {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck::*;
     use serde_json;
 
     #[test]
@@ -293,5 +333,12 @@ mod tests {
             })
             .unwrap()
         );
+    }
+
+    quickcheck! {
+        fn qc_sanity(m: usize, n: usize) -> bool {
+            let maze = Maze::new(m, n);
+            maze.verify()
+        }
     }
 }
