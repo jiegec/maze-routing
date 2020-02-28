@@ -89,6 +89,10 @@ impl Maze {
                     let (dx, dy) = direction.offset();
                     let new_x = (cur_x as isize + dx) as usize;
                     let new_y = (cur_y as isize + dy) as usize;
+                    if new_x == x1 && new_y == y1 {
+                        break;
+                    }
+
                     let new_direction = dir_map[new_x][new_y].unwrap();
                     changes.push((
                         new_x,
@@ -179,6 +183,10 @@ impl Maze {
                     let (dx, dy) = direction.offset();
                     let new_x = (cur_x as isize + dx) as usize;
                     let new_y = (cur_y as isize + dy) as usize;
+                    if new_x == x1 && new_y == y1 {
+                        break;
+                    }
+
                     let new_direction = dir_map[new_x][new_y].unwrap();
                     changes.push((
                         new_x,
@@ -269,6 +277,10 @@ impl Maze {
                     let (dx, dy) = direction.offset();
                     let new_x = (cur_x as isize + dx) as usize;
                     let new_y = (cur_y as isize + dy) as usize;
+                    if new_x == x1 && new_y == y1 {
+                        break;
+                    }
+
                     let new_direction = dir_map[new_x][new_y].unwrap();
                     changes.push((
                         new_x,
@@ -512,6 +524,13 @@ mod tests {
         assert!(maze.lee_multi_mut(&Points {
             points: vec![(0, 3), (4, 3)]
         }));
+        println!("{}", maze);
+    }
+
+    #[test]
+    fn lee_regression() {
+        let mut maze = Maze::new(2, 1);
+        assert!(maze.lee_mut(1, 0, 0, 0));
         println!("{}", maze);
     }
 
