@@ -288,6 +288,10 @@ impl Maze {
         }
         true
     }
+
+    pub fn to_string(&self) -> String {
+        format!("{}", self)
+    }
 }
 
 impl fmt::Display for Maze {

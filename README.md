@@ -15,7 +15,8 @@ Two-pin nets:
 Multiple-pin nets:
 
 1. Lee
-2. Single Trunk Steiner Tree
+2. Mikami-Tabuchi
+3. Single Trunk Steiner Tree
 
 ## References
 

@@ -246,6 +246,12 @@ mod tests {
             points: vec![(0, 3), (4, 3)]
         }));
         println!("{}", maze);
+
+        let mut maze = Maze::new(10, 1);
+        assert!(maze.mikami_tabuchi_multi_mut(&Points {
+            points: vec![(0, 0), (9, 0)]
+        }));
+        println!("{}", maze);
     }
 
     quickcheck! {
