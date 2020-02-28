@@ -30,7 +30,7 @@ impl Maze {
                     let (dx, dy) = direction.offset();
                     let new_x = (cur_x as isize + dx) as usize;
                     let new_y = (cur_y as isize + dy) as usize;
-                    if new_map[new_x][new_y] == CellState::Blocked {
+                    if new_x == x1 && new_y == y1 {
                         break;
                     }
 
