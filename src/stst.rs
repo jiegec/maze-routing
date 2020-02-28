@@ -210,7 +210,7 @@ mod tests {
     }
 
     #[test]
-    fn stst_regression() {
+    fn stst_regression_1() {
         let mut maze = Maze::new(2, 1);
         assert!(maze.stst_mut(&Points { points: vec![] }));
         println!("{}", maze);

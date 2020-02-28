@@ -360,7 +360,9 @@ impl Maze {
     pub fn lee_multi(&self, points: &Points) -> Option<ChangeSet> {
         use Direction::*;
         let mut changes = vec![];
-        let points = points.points.clone();
+        let mut points = points.points.clone();
+        points.sort();
+        points.dedup();
         if points.len() == 0 {
             return Some(ChangeSet { changes });
         } else if points.len() == 1 {
@@ -528,9 +530,16 @@ mod tests {
     }
 
     #[test]
-    fn lee_regression() {
+    fn lee_regression_1() {
         let mut maze = Maze::new(2, 1);
         assert!(maze.lee_mut(1, 0, 0, 0));
+        println!("{}", maze);
+    }
+
+    #[test]
+    fn lee_multi_regression_1() {
+        let mut maze = Maze::new(2, 1);
+        assert!(maze.lee_multi_mut(&Points { points: vec![(0, 0), (0, 0)] }));
         println!("{}", maze);
     }
 
@@ -541,6 +550,21 @@ mod tests {
             }
             let mut maze = Maze::new(m, n);
             maze.lee_mut(x1 % m, y1 % n, x2 % m, y2 % n) && maze.verify()
+        }
+
+        fn qc_lee_multi(m: usize, n: usize, points: Vec<(usize, usize)>) -> bool {
+            if m == 0 || n == 0 {
+                return true;
+            }
+            let mut points = points.clone();
+            for point in &mut points {
+                point.0 %= m;
+                point.1 %= n;
+            }
+            let mut maze = Maze::new(m, n);
+            maze.lee_multi_mut(&Points {
+                points
+            }) && maze.verify()
         }
     }
 }
