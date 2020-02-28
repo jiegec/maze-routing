@@ -52,9 +52,7 @@ impl Maze {
             let mut new_x = x + dx;
             let mut new_y = y + dy;
             while 0 <= new_x && new_x < m && 0 <= new_y && new_y < n {
-                if dir_map[new_x as usize][new_y as usize].is_some() {
-                    break;
-                } else if dir_map[new_x as usize][new_y as usize].is_none()
+                if dir_map[new_x as usize][new_y as usize].is_none()
                     && direction.can_cross(&self.map[new_x as usize][new_y as usize])
                 {
                     dir_map[new_x as usize][new_y as usize] = Some(direction.opposite());
@@ -68,9 +66,11 @@ impl Maze {
                             queue.push_back((new_x as usize, new_y as usize, R));
                         }
                     }
+                    new_x += dx;
+                    new_y += dy;
+                } else {
+                    break;
                 }
-                new_x += dx;
-                new_y += dy;
             }
         }
         None
