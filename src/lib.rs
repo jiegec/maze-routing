@@ -6,6 +6,7 @@ use wasm_bindgen::prelude::*;
 
 mod hadlock;
 mod lee;
+mod mikami_tabuchi;
 mod soukup;
 mod stst;
 
@@ -109,7 +110,6 @@ impl Direction {
 
     fn get_new_cell_state(&self, prev: &Direction, old_state: &CellState) -> CellState {
         use CellState::*;
-        use Direction::*;
         if *old_state == Blocked {
             return Blocked;
         }
