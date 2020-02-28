@@ -10,24 +10,38 @@ mod mikami_tabuchi;
 mod soukup;
 mod stst;
 
+/// Cell's state
 #[wasm_bindgen]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub enum CellState {
+    /// Empty cell
     Empty,
+    /// Blocked cell
     Blocked,
+    /// Up, right, down and left
     Cross,
     // 180 angles
+    /// Left and right
     LR,
+    /// Up and down
     UD,
     // 90 angles
+    /// Left and up
     LU,
+    /// Right and up
     RU,
+    /// Left and down
     LD,
+    /// Right and down
     RD,
     // three directions
+    /// Left, up and right
     LUR,
+    /// Up, right and down
     URD,
+    /// Right, down and left
     RDL,
+    /// Down, left and up
     DLU,
 }
 
@@ -75,6 +89,7 @@ impl CellState {
     }
 }
 
+/// Four directions
 #[derive(Copy, Clone, Debug)]
 pub enum Direction {
     L,
@@ -84,7 +99,8 @@ pub enum Direction {
 }
 
 impl Direction {
-    fn opposite(&self) -> Direction {
+    /// Get the opposite direction
+    pub fn opposite(&self) -> Direction {
         use Direction::*;
         match self {
             L => R,
@@ -157,6 +173,7 @@ impl Direction {
     }
 }
 
+/// A grid maze.
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Maze {
@@ -234,6 +251,7 @@ impl Maze {
         }
     }
 
+    /// apply changeset
     pub fn apply(&mut self, changes: &ChangeSet) {
         for (x, y, state) in &changes.changes {
             self.map[*x][*y] = *state;
@@ -284,6 +302,7 @@ impl fmt::Display for Maze {
     }
 }
 
+/// Represents a changeset of maze cells.
 #[wasm_bindgen]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ChangeSet {
@@ -292,19 +311,30 @@ pub struct ChangeSet {
 
 #[wasm_bindgen]
 impl ChangeSet {
+    /// For use in JS.
     pub fn to_js(&self) -> JsValue {
         JsValue::from_serde(&self.changes).unwrap()
     }
 }
 
+/// A vector of points.
 #[wasm_bindgen]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Points {
     points: Vec<(usize, usize)>,
 }
 
+impl Points {
+    pub fn new(points: &[(usize, usize)]) -> Points {
+        Points {
+            points: Vec::from(points),
+        }
+    }
+}
+
 #[wasm_bindgen]
 impl Points {
+    /// For use in JS.
     pub fn to_js(&self) -> JsValue {
         JsValue::from_serde(&self.points).unwrap()
     }

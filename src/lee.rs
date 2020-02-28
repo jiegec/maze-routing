@@ -440,6 +440,7 @@ impl Maze {
         None
     }
 
+    /// Lee's algorithm, find rectified steiner tree
     pub fn lee_multi_mut(&mut self, points: &Points) -> bool {
         match self.lee_multi(points) {
             Some(changes) => {

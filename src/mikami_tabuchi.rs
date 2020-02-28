@@ -81,6 +81,7 @@ impl Maze {
         None
     }
 
+    /// Mikami-Tabuchi's algorithm, line search
     pub fn mikami_tabuchi_mut(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
         match self.mikami_tabuchi(x1, y1, x2, y2) {
             Some(changes) => {

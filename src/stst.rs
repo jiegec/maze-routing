@@ -4,6 +4,7 @@ use super::*;
 
 #[wasm_bindgen]
 impl Maze {
+    /// Single Trunk Steiner Tree Algorithm
     pub fn stst(&self, points: &Points) -> Option<ChangeSet> {
         use CellState::*;
         let mut points = points.points.clone();
@@ -161,6 +162,7 @@ impl Maze {
         ans
     }
 
+    /// Single Trunk Steiner Tree Algorithm
     pub fn stst_mut(&mut self, points: &Points) -> bool {
         match self.stst(points) {
             Some(changes) => {
