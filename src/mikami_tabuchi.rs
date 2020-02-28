@@ -30,6 +30,10 @@ impl Maze {
                     let (dx, dy) = direction.offset();
                     let new_x = (cur_x as isize + dx) as usize;
                     let new_y = (cur_y as isize + dy) as usize;
+                    if new_map[new_x][new_y] == CellState::Blocked {
+                        break;
+                    }
+
                     let new_direction = dir_map[new_x][new_y].unwrap();
                     changes.push((
                         new_x,
