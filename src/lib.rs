@@ -220,7 +220,7 @@ impl Maze {
         inst
     }
 
-    /// sets all points in rectangle (x1, y1) to (x2, y2) to empty
+    /// Set all points in rectangle (x1, y1) to (x2, y2) to empty
     pub fn clean_mut(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
         let from_x = min(x1, x2);
         let to_x = max(x1, x2);
@@ -235,14 +235,14 @@ impl Maze {
         }
     }
 
-    /// sets all points in rectangle (x1, y1) to (x2, y2) to empty
+    /// Set all points in rectangle (x1, y1) to (x2, y2) to empty
     pub fn clean(&self, x1: usize, y1: usize, x2: usize, y2: usize) -> Maze {
         let mut inst = self.clone();
         inst.clean_mut(x1, y1, x2, y2);
         inst
     }
 
-    /// set all cells to empty
+    /// Set all cells to empty
     pub fn clear_mut(&mut self) {
         for line in &mut self.map {
             for item in line {
@@ -251,7 +251,7 @@ impl Maze {
         }
     }
 
-    /// apply changeset
+    /// Apply changeset
     pub fn apply(&mut self, changes: &ChangeSet) {
         for (x, y, state) in &changes.changes {
             self.map[*x][*y] = *state;
@@ -302,7 +302,7 @@ impl fmt::Display for Maze {
     }
 }
 
-/// Represents a changeset of maze cells.
+/// Represent a changeset of maze cells.
 #[wasm_bindgen]
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ChangeSet {
@@ -329,6 +329,14 @@ impl Points {
         Points {
             points: Vec::from(points),
         }
+    }
+
+    /// get a deduped and sorted list of points
+    fn get(&self) -> Vec<(usize, usize)> {
+        let mut res = self.points.clone();
+        res.sort();
+        res.dedup();
+        res
     }
 }
 

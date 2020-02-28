@@ -360,9 +360,7 @@ impl Maze {
     pub fn lee_multi(&self, points: &Points) -> Option<ChangeSet> {
         use Direction::*;
         let mut changes = vec![];
-        let mut points = points.points.clone();
-        points.sort();
-        points.dedup();
+        let points = points.get();
         if points.len() == 0 {
             return Some(ChangeSet { changes });
         } else if points.len() == 1 {

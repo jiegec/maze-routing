@@ -7,12 +7,10 @@ impl Maze {
     /// Single Trunk Steiner Tree Algorithm
     pub fn stst(&self, points: &Points) -> Option<ChangeSet> {
         use CellState::*;
-        let mut points = points.points.clone();
+        let points = points.get();
         if points.len() == 0 {
             return Some(ChangeSet { changes: vec![] });
         }
-        points.sort();
-        points.dedup();
         for (x, y) in &points {
             if self.map[*x][*y] != Empty {
                 return None;
