@@ -129,6 +129,8 @@ impl Maze {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck::*;
+
     #[test]
     fn hadlock() {
         let mut maze = Maze::new(3, 3);
@@ -149,5 +151,26 @@ mod tests {
         println!("{}", maze);
         assert_eq!(maze.get(2, 4), CellState::RU);
         assert_eq!(maze.get(4, 6), CellState::LU);
+    }
+
+    quickcheck! {
+        fn qc_hadlock(m: usize, n: usize, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
+            if m == 0 || n == 0 {
+                return true;
+            }
+            let mut maze = Maze::new(m, n);
+            maze.hadlock_mut(x1 % m, y1 % n, x2 % m, y2 % n) && maze.verify()
+        }
+
+        fn qc_hadlock_many(m: usize, n: usize, points: Vec<(usize, usize, usize, usize)>) -> bool {
+            if m == 0 || n == 0 {
+                return true;
+            }
+            let mut maze = Maze::new(m, n);
+            for (x1, y1, x2, y2) in points {
+                maze.hadlock_mut(x1 % m, y1 % n, x2 % m, y2 % n);
+            }
+            maze.verify()
+        }
     }
 }

@@ -539,7 +539,9 @@ mod tests {
     #[test]
     fn lee_multi_regression_1() {
         let mut maze = Maze::new(2, 1);
-        assert!(maze.lee_multi_mut(&Points { points: vec![(0, 0), (0, 0)] }));
+        assert!(maze.lee_multi_mut(&Points {
+            points: vec![(0, 0), (0, 0)]
+        }));
         println!("{}", maze);
     }
 
@@ -550,6 +552,17 @@ mod tests {
             }
             let mut maze = Maze::new(m, n);
             maze.lee_mut(x1 % m, y1 % n, x2 % m, y2 % n) && maze.verify()
+        }
+
+        fn qc_lee_many(m: usize, n: usize, points: Vec<(usize, usize, usize, usize)>) -> bool {
+            if m == 0 || n == 0 {
+                return true;
+            }
+            let mut maze = Maze::new(m, n);
+            for (x1, y1, x2, y2) in points {
+                maze.lee_mut(x1 % m, y1 % n, x2 % m, y2 % n);
+            }
+            maze.verify()
         }
 
         fn qc_lee_multi(m: usize, n: usize, points: Vec<(usize, usize)>) -> bool {
