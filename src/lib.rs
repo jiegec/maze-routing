@@ -292,6 +292,40 @@ impl Maze {
     pub fn to_string(&self) -> String {
         format!("{}", self)
     }
+
+    pub fn two_terminal(&self, x1: usize, y1: usize, x2: usize, y2: usize) -> Option<ChangeSet> {
+        self.mikami_tabuchi(x1, y1, x2, y2).or_else(|| {
+            self.hadlock(x1, y1, x2, y2)
+                .or_else(|| self.lee(x1, y1, x2, y2))
+        })
+    }
+
+    pub fn two_terminal_mut(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) -> bool {
+        match self.two_terminal(x1, y1, x2, y2) {
+            Some(changes) => {
+                self.apply(&changes);
+                true
+            }
+            None => false,
+        }
+    }
+
+    pub fn multi_terminal(&self, points: &Points) -> Option<ChangeSet> {
+        self.stst(points).or_else(|| {
+            self.mikami_tabuchi_multi(points)
+                .or_else(|| self.lee_multi(points))
+        })
+    }
+
+    pub fn multi_terminal_mut(&mut self, points: &Points) -> bool {
+        match self.multi_terminal(points) {
+            Some(changes) => {
+                self.apply(&changes);
+                true
+            }
+            None => false,
+        }
+    }
 }
 
 impl fmt::Display for Maze {
