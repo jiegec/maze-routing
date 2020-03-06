@@ -37,7 +37,7 @@ impl Maze {
         let mut ans: Option<ChangeSet> = None;
 
         // try horizontal
-        'next: for (_point_x, point_y) in &points {
+        'next_h: for (_point_x, point_y) in &points {
             // construct a trunk from this point
             let mut changes: Vec<(usize, usize, CellState)> = vec![];
             let mut down = vec![false; max_x - min_x + 1];
@@ -55,7 +55,7 @@ impl Maze {
 
             // x = min_x
             if self.map[min_x][*point_y] != Empty {
-                continue 'next;
+                continue 'next_h;
             }
             if on[0] {
                 // handled below
@@ -71,7 +71,7 @@ impl Maze {
 
             // x = max_x
             if self.map[max_x][*point_y] != Empty {
-                continue 'next;
+                continue 'next_h;
             }
             if on[max_x - min_x] {
                 // handled below
@@ -90,7 +90,7 @@ impl Maze {
                     && (on[x - min_x] || up[x - min_x] || down[x - min_x])
                 {
                     // non-LR
-                    continue 'next;
+                    continue 'next_h;
                 }
                 if on[x - min_x] {
                     // handled below
@@ -106,7 +106,7 @@ impl Maze {
                     } else if self.map[x][*point_y] == UD {
                         changes.push((x, *point_y, Cross));
                     } else {
-                        continue 'next;
+                        continue 'next_h;
                     }
                 }
             }
@@ -122,7 +122,7 @@ impl Maze {
                         } else if self.map[*new_x][y] == LR {
                             changes.push((*new_x, y, Cross));
                         } else {
-                            continue 'next;
+                            continue 'next_h;
                         }
                     }
                 } else {
@@ -132,7 +132,128 @@ impl Maze {
                         } else if self.map[*new_x][y] == LR {
                             changes.push((*new_x, y, Cross));
                         } else {
-                            continue 'next;
+                            continue 'next_h;
+                        }
+                    }
+                }
+            }
+
+            for (x, y) in &points {
+                changes.push((*x, *y, Blocked));
+            }
+
+            // remove duplicate assignments to one cell
+            changes.sort_by_key(|(x, y, _state)| (*x, *y));
+            changes.reverse();
+            changes.dedup_by_key(|(x, y, _state)| (*x, *y));
+
+            match &ans {
+                Some(old) => {
+                    if old.changes.len() > changes.len() {
+                        ans = Some(ChangeSet { changes: changes })
+                    }
+                }
+                None => ans = Some(ChangeSet { changes: changes }),
+            }
+        }
+
+        // try vertical
+        'next_v: for (point_x, _point_y) in &points {
+            // construct a trunk from this point
+            let mut changes: Vec<(usize, usize, CellState)> = vec![];
+            let mut left = vec![false; max_y - min_y + 1];
+            let mut right = vec![false; max_y - min_y + 1];
+            let mut on = vec![false; max_y - min_y + 1];
+            for (new_x, new_y) in &points {
+                if new_x == point_x {
+                    on[new_y - min_y] = true;
+                } else if new_x > point_x {
+                    right[new_y - min_y] = true;
+                } else {
+                    left[new_y - min_y] = true;
+                }
+            }
+
+            // y = min_y
+            if self.map[*point_x][min_y] != Empty {
+                continue 'next_v;
+            }
+            if on[0] {
+                // handled below
+            } else if right[0] && left[0] {
+                changes.push((*point_x, min_y, LUR));
+            } else if right[0] {
+                changes.push((*point_x, min_y, RU));
+            } else if left[0] {
+                changes.push((*point_x, min_y, LU));
+            } else {
+                unreachable!();
+            }
+
+            // y = max_y
+            if self.map[*point_x][max_y] != Empty {
+                continue 'next_v;
+            }
+            if on[max_y - min_y] {
+                // handled below
+            } else if right[max_y - min_y] && left[max_y - min_y] {
+                changes.push((*point_x, max_y, RDL));
+            } else if right[max_y - min_y] {
+                changes.push((*point_x, max_y, RD));
+            } else if left[max_y - min_y] {
+                changes.push((*point_x, max_y, LD));
+            } else {
+                unreachable!();
+            }
+
+            for y in (min_y + 1)..(max_y) {
+                if self.map[*point_x][y] != Empty
+                    && (on[y - min_y] || right[y - min_y] || left[y - min_y])
+                {
+                    // non-UD
+                    continue 'next_v;
+                }
+                if on[y - min_y] {
+                    // handled below
+                } else if right[y - min_y] && left[y - min_y] {
+                    changes.push((*point_x, y, Cross));
+                } else if right[y - min_y] {
+                    changes.push((*point_x, y, URD));
+                } else if left[y - min_y] {
+                    changes.push((*point_x, y, DLU));
+                } else {
+                    if self.map[*point_x][y] == Empty {
+                        changes.push((*point_x, y, UD));
+                    } else if self.map[*point_x][y] == LR {
+                        changes.push((*point_x, y, Cross));
+                    } else {
+                        continue 'next_v;
+                    }
+                }
+            }
+
+            for (new_x, new_y) in &points {
+                if new_x == point_x {
+                    // handled below
+                    continue;
+                } else if new_x > point_x {
+                    for x in (point_x + 1)..*new_x {
+                        if self.map[x][*new_y] == Empty {
+                            changes.push((x, *new_y, LR));
+                        } else if self.map[x][*new_y] == UD {
+                            changes.push((x, *new_y, Cross));
+                        } else {
+                            continue 'next_v;
+                        }
+                    }
+                } else {
+                    for x in *new_x..*point_x {
+                        if self.map[x][*new_y] == Empty {
+                            changes.push((x, *new_y, LR));
+                        } else if self.map[x][*new_y] == UD {
+                            changes.push((x, *new_y, Cross));
+                        } else {
+                            continue 'next_v;
                         }
                     }
                 }
@@ -194,7 +315,7 @@ mod tests {
         }));
         println!("{}", maze);
         assert!(maze.stst_mut(&Points {
-            points: vec![(0, 3), (2, 3)]
+            points: vec![(0, 3), (3, 3)]
         }));
         println!("{}", maze);
 
@@ -213,6 +334,15 @@ mod tests {
     fn stst_regression_1() {
         let mut maze = Maze::new(2, 1);
         assert!(maze.stst_mut(&Points { points: vec![] }));
+        println!("{}", maze);
+    }
+
+    #[test]
+    fn stst_regression_2() {
+        let mut maze = Maze::new(2, 6);
+        assert!(maze.stst_mut(&Points {
+            points: vec![(1, 1), (0, 4), (0, 2), (1, 4)]
+        }));
         println!("{}", maze);
     }
 
