@@ -351,6 +351,11 @@ mod tests {
             if m == 0 || n == 0 {
                 return true;
             }
+            // check oom
+            if m > 10000 || n > 10000 {
+                return true
+            }
+
             let mut points = points.clone();
             for point in &mut points {
                 point.0 %= m;

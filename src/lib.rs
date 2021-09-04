@@ -413,6 +413,11 @@ mod tests {
 
     quickcheck! {
         fn qc_sanity(m: usize, n: usize) -> bool {
+            // check oom
+            if m > 10000 || n > 10000 {
+                return true
+            }
+
             let maze = Maze::new(m, n);
             maze.verify()
         }

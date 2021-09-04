@@ -549,6 +549,11 @@ mod tests {
             if m == 0 || n == 0 {
                 return true;
             }
+            // check oom
+            if m > 10000 || n > 10000 {
+                return true
+            }
+
             let mut maze = Maze::new(m, n);
             maze.lee_mut(x1 % m, y1 % n, x2 % m, y2 % n) && maze.verify()
         }
@@ -557,6 +562,11 @@ mod tests {
             if m == 0 || n == 0 {
                 return true;
             }
+            // check oom
+            if m > 10000 || n > 10000 {
+                return true
+            }
+
             let mut maze = Maze::new(m, n);
             for (x1, y1, x2, y2) in points {
                 maze.lee_mut(x1 % m, y1 % n, x2 % m, y2 % n);
@@ -568,6 +578,11 @@ mod tests {
             if m == 0 || n == 0 {
                 return true;
             }
+            // check oom
+            if m > 10000 || n > 10000 {
+                return true
+            }
+
             let mut points = points.clone();
             for point in &mut points {
                 point.0 %= m;
