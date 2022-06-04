@@ -14,6 +14,8 @@
 </template>
 
 <script>
+// https://github.com/rustwasm/wasm-pack/issues/911
+import init, {Maze, CellState, Points} from 'maze-routing/maze_routing';
 let mod = null;
 
 export default {
@@ -28,8 +30,8 @@ export default {
   }),
 
   async mounted() {
-    mod = await import("maze-routing");
-    this.maze = new mod.Maze(this.m, this.n);
+    mod = await init();
+    this.maze = new Maze(this.m, this.n);
     this.algo = this.maze.lee_mut;
     this.draw();
   },
@@ -48,7 +50,7 @@ export default {
           for (let i = 0; i < arguments.length; i += 2) {
             arg.push([arguments[i], arguments[i + 1]]);
           }
-          let points = new mod.Points(arg);
+          let points = new Points(arg);
           this.stst_mut(points);
           console.log(this, arguments, points);
         };
@@ -81,7 +83,7 @@ export default {
           const posY = this.getPosY(y);
           if (
             Math.pow(posX - canvasX, 2) + Math.pow(posY - canvasY, 2) < 80 &&
-            this.maze.get(x, y) == mod.CellState.Empty
+            this.maze.get(x, y) == CellState.Empty
           ) {
             this.selected.push(x);
             this.selected.push(y);
@@ -106,57 +108,57 @@ export default {
                 break;
               }
             }
-            if (cell === mod.CellState.Empty) {
+            if (cell === CellState.Empty) {
               ctx.arc(posX, posY, 5, 0, 360);
-            } else if (cell == mod.CellState.Blocked) {
+            } else if (cell == CellState.Blocked) {
               let crossSize = 5;
               ctx.moveTo(posX - crossSize, posY - crossSize);
               ctx.lineTo(posX + crossSize, posY + crossSize);
               ctx.moveTo(posX - crossSize, posY + crossSize);
               ctx.lineTo(posX + crossSize, posY - crossSize);
-            } else if (cell == mod.CellState.LR) {
+            } else if (cell == CellState.LR) {
               ctx.moveTo((this.getPosX(x - 1) + posX) / 2, posY);
               ctx.lineTo((this.getPosX(x + 1) + posX) / 2, posY);
-            } else if (cell == mod.CellState.UD) {
+            } else if (cell == CellState.UD) {
               ctx.moveTo(posX, (this.getPosY(y - 1) + posY) / 2);
               ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
-            } else if (cell == mod.CellState.LU) {
+            } else if (cell == CellState.LU) {
               ctx.moveTo((this.getPosX(x - 1) + posX) / 2, posY);
               ctx.lineTo(posX, posY);
               ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
-            } else if (cell == mod.CellState.LD) {
+            } else if (cell == CellState.LD) {
               ctx.moveTo((this.getPosX(x - 1) + posX) / 2, posY);
               ctx.lineTo(posX, posY);
               ctx.lineTo(posX, (this.getPosY(y - 1) + posY) / 2);
-            } else if (cell == mod.CellState.RU) {
+            } else if (cell == CellState.RU) {
               ctx.moveTo((this.getPosX(x + 1) + posX) / 2, posY);
               ctx.lineTo(posX, posY);
               ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
-            } else if (cell == mod.CellState.RD) {
+            } else if (cell == CellState.RD) {
               ctx.moveTo((this.getPosX(x + 1) + posX) / 2, posY);
               ctx.lineTo(posX, posY);
               ctx.lineTo(posX, (this.getPosY(y - 1) + posY) / 2);
-            } else if (cell == mod.CellState.Cross) {
+            } else if (cell == CellState.Cross) {
               ctx.moveTo((this.getPosX(x - 1) + posX) / 2, posY);
               ctx.lineTo((this.getPosX(x + 1) + posX) / 2, posY);
               ctx.moveTo(posX, (this.getPosY(y - 1) + posY) / 2);
               ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
-            } else if (cell == mod.CellState.LUR) {
+            } else if (cell == CellState.LUR) {
               ctx.moveTo((this.getPosX(x - 1) + posX) / 2, posY);
               ctx.lineTo((this.getPosX(x + 1) + posX) / 2, posY);
               ctx.moveTo(posX, posY);
               ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
-            } else if (cell == mod.CellState.RDL) {
+            } else if (cell == CellState.RDL) {
               ctx.moveTo((this.getPosX(x - 1) + posX) / 2, posY);
               ctx.lineTo((this.getPosX(x + 1) + posX) / 2, posY);
               ctx.moveTo(posX, posY);
               ctx.lineTo(posX, (this.getPosY(y - 1) + posY) / 2);
-            } else if (cell == mod.CellState.URD) {
+            } else if (cell == CellState.URD) {
               ctx.moveTo(posX, (this.getPosY(y - 1) + posY) / 2);
               ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
               ctx.moveTo(posX, posY);
               ctx.lineTo((this.getPosX(x + 1) + posX) / 2, posY);
-            } else if (cell == mod.CellState.DLU) {
+            } else if (cell == CellState.DLU) {
               ctx.moveTo(posX, (this.getPosY(y - 1) + posY) / 2);
               ctx.lineTo(posX, (this.getPosY(y + 1) + posY) / 2);
               ctx.moveTo(posX, posY);
@@ -176,7 +178,7 @@ export default {
       this.algo.apply(this.maze, [x1, y1, x2, y2]);
     },
     reset() {
-      this.maze = new mod.Maze(this.m, this.n);
+      this.maze = new Maze(this.m, this.n);
     },
     submit() {
       this.algo.apply(this.maze, this.selected);
