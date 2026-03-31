@@ -1,4 +1,5 @@
 use serde_derive::{Deserialize, Serialize};
+use serde_wasm_bindgen;
 use std::cmp::{max, min, Ordering};
 use std::collections::{BinaryHeap, VecDeque};
 use std::fmt;
@@ -351,7 +352,7 @@ pub struct ChangeSet {
 impl ChangeSet {
     /// For use in JS.
     pub fn to_js(&self) -> JsValue {
-        JsValue::from_serde(&self.changes).unwrap()
+        serde_wasm_bindgen::to_value(&self.changes).unwrap()
     }
 }
 
@@ -382,12 +383,12 @@ impl Points {
 impl Points {
     /// For use in JS.
     pub fn to_js(&self) -> JsValue {
-        JsValue::from_serde(&self.points).unwrap()
+        serde_wasm_bindgen::to_value(&self.points).unwrap()
     }
 
     #[wasm_bindgen(constructor)]
     pub fn from_js(js: JsValue) -> Points {
-        JsValue::into_serde(&js)
+        serde_wasm_bindgen::from_value(js)
             .ok()
             .map(|points| Points { points })
             .unwrap()
